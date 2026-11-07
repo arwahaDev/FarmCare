@@ -21,27 +21,27 @@ export default function Crops() {
   const [message, setMessage] = useState("");
   const [buyers, setBuyers] = useState([]);
 
-useEffect(() => {
-  function loadBuyers() {
-    try {
-      const savedBuyers = JSON.parse(
-        localStorage.getItem("agri_buyers") || "[]"
-      );
+  useEffect(() => {
+    function loadBuyers() {
+      try {
+        const savedBuyers = JSON.parse(
+          localStorage.getItem("agri_buyers") || "[]"
+        );
 
-      setBuyers(Array.isArray(savedBuyers) ? savedBuyers : []);
-    } catch {
-      setBuyers([]);
+        setBuyers(Array.isArray(savedBuyers) ? savedBuyers : []);
+      } catch {
+        setBuyers([]);
+      }
     }
-  }
 
-  loadBuyers();
+    loadBuyers();
 
-  window.addEventListener("focus", loadBuyers);
+    window.addEventListener("focus", loadBuyers);
 
-  return () => {
-    window.removeEventListener("focus", loadBuyers);
-  };
-}, []);
+    return () => {
+      window.removeEventListener("focus", loadBuyers);
+    };
+  }, []);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -91,6 +91,8 @@ useEffect(() => {
       status: getStatus(form.healthScore),
     };
 
+    console.log("Saved Crop Data:", cropData);
+
     if (editingId !== null) {
       setCrops((previous) =>
         previous.map((crop) =>
@@ -99,6 +101,9 @@ useEffect(() => {
             : crop
         )
       );
+
+      window.dispatchEvent(new Event("cropsUpdated"));
+
       setMessage("Crop updated successfully.");
     } else {
       const newCrop = {
@@ -107,6 +112,9 @@ useEffect(() => {
       };
 
       setCrops((previous) => [...previous, newCrop]);
+
+      window.dispatchEvent(new Event("cropsUpdated"));
+
       setMessage("Crop added successfully.");
     }
 
@@ -126,7 +134,11 @@ useEffect(() => {
 
     setEditingId(crop.id);
     setMessage("");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   }
 
   function handleDelete(id) {
@@ -139,6 +151,8 @@ useEffect(() => {
     setCrops((previous) =>
       previous.filter((crop) => crop.id !== id)
     );
+
+    window.dispatchEvent(new Event("cropsUpdated"));
 
     if (editingId === id) {
       setForm(emptyForm);
@@ -160,18 +174,20 @@ useEffect(() => {
 
     return matchesSearch && matchesHealth;
   });
-  function handleExportCrops() {
-  const crops = JSON.parse(
-    localStorage.getItem("agri_crops") || "[]"
-  );
 
-  exportCsv(crops, "Farmer Hub.csv");
-}
+  function handleExportCrops() {
+    const savedCrops = JSON.parse(
+      localStorage.getItem("agri_crops") || "[]"
+    );
+
+    exportCsv(savedCrops, "Farmer Hub.csv");
+  }
 
   return (
     <div className="crops-page">
       <div className="mb-4">
         <h2 className="page-heading">Crop Management</h2>
+
         <p className="text-muted">
           Manage crop details, health and cutting schedules.
         </p>
@@ -182,22 +198,25 @@ useEffect(() => {
           {message}
         </div>
       )}
-        <button
-                   type="button"
-                className="btn btn-success mb-3"
-                 onClick={handleExportCrops}
-                >
-                 Export Crops CSV
-                </button>
+
+      <button
+        type="button"
+        className="btn btn-success mb-3"
+        onClick={handleExportCrops}
+      >
+        Export Crops CSV
+      </button>
+
       <div className="dashboard-card mb-4">
         <h4 className="section-heading">
           {editingId !== null ? "Edit Crop" : "Add New Crop"}
         </h4>
-          
+
         <form onSubmit={handleSubmit}>
           <div className="row g-3">
             <div className="col-12 col-md-6">
               <label className="form-label">Crop Name</label>
+
               <input
                 className="form-control"
                 name="name"
@@ -207,9 +226,10 @@ useEffect(() => {
                 required
               />
             </div>
-                 
+
             <div className="col-12 col-md-6">
               <label className="form-label">Field Name</label>
+
               <input
                 className="form-control"
                 name="field"
@@ -222,6 +242,7 @@ useEffect(() => {
 
             <div className="col-12 col-md-6">
               <label className="form-label">Planting Date</label>
+
               <input
                 className="form-control"
                 type="date"
@@ -233,7 +254,10 @@ useEffect(() => {
             </div>
 
             <div className="col-12 col-md-6">
-              <label className="form-label">Planned Cutting Date</label>
+              <label className="form-label">
+                Planned Cutting Date
+              </label>
+
               <input
                 className="form-control"
                 type="date"
@@ -249,6 +273,7 @@ useEffect(() => {
               <label className="form-label">
                 Health Score: {form.healthScore}%
               </label>
+
               <input
                 className="form-range"
                 type="range"
@@ -258,6 +283,7 @@ useEffect(() => {
                 value={form.healthScore}
                 onChange={handleChange}
               />
+
               <small className="text-muted">
                 70–100: Healthy; 40–69: Needs Attention; 0–39: Critical.
               </small>
@@ -267,6 +293,7 @@ useEffect(() => {
               <label className="form-label">
                 Expected Quantity (kg)
               </label>
+
               <input
                 className="form-control"
                 type="number"
@@ -353,6 +380,7 @@ useEffect(() => {
                   <tr key={crop.id}>
                     <td>{crop.name}</td>
                     <td>{crop.field}</td>
+
                     <td>
                       <span
                         className={`badge ${
@@ -366,22 +394,31 @@ useEffect(() => {
                         {status} ({crop.healthScore ?? 80}%)
                       </span>
                     </td>
+
                     <td>{crop.plantingDate}</td>
                     <td>{crop.cuttingDate}</td>
                     <td>{crop.expectedQuantity} kg</td>
+
                     <td style={{ minWidth: "180px" }}>
-                  <StockProgressBar
-                       harvested={crop.harvestQty ?? crop.expectedQuantity ?? 0}
-                      sold={buyers
-                     .filter(
-                     (buyer) => String(buyer.cropId) === String(crop.id)
-                             )
-                        .reduce(
-                        (total, buyer) => total + (Number(buyer.quantity) || 0),
-                           0
+                      <StockProgressBar
+                        harvested={
+                          crop.harvestQty ??
+                          crop.expectedQuantity ??
+                          0
+                        }
+                        sold={buyers
+                          .filter(
+                            (buyer) =>
+                              String(buyer.cropId) === String(crop.id)
+                          )
+                          .reduce(
+                            (total, buyer) =>
+                              total + (Number(buyer.quantity) || 0),
+                            0
                           )}
-                          />
-                         </td>
+                      />
+                    </td>
+
                     <td>
                       <div className="d-flex gap-2">
                         <button
@@ -390,6 +427,7 @@ useEffect(() => {
                         >
                           Edit
                         </button>
+
                         <button
                           className="btn btn-sm btn-outline-danger"
                           onClick={() => handleDelete(crop.id)}
@@ -413,7 +451,6 @@ useEffect(() => {
           </table>
         </div>
       </div>
-     
     </div>
   );
 }

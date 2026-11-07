@@ -1,15 +1,26 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+
 import SearchBar from "./SearchBar";
+
+import {
+  selectCurrentUser,
+  selectIsAuthenticated,
+} from "../../app/redux/selectors";
+
+import { logout as logoutAction } from "../../app/redux/actions/users";
+import { logout as logoutAPI } from "../../app/redux/api/users";
+
 export default function Navbar() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const currentUser = useSelector(selectCurrentUser);
+  const isLoggedIn = useSelector(selectIsAuthenticated);
 
   const [darkMode, setDarkMode] = useState(
     document.body.classList.contains("dark-mode")
-  );
-
-  const [isLoggedIn, setIsLoggedIn] = useState(
-    localStorage.getItem("isAuthenticated") === "true"
   );
 
   function toggleDarkMode() {
@@ -18,10 +29,14 @@ export default function Navbar() {
     document.body.classList.toggle("dark-mode", nextMode);
   }
 
-  function handleLogout() {
-    localStorage.removeItem("isAuthenticated");
-    setIsLoggedIn(false);
-    navigate("/login", { replace: true });
+  async function handleLogout() {
+    try {
+      await logoutAPI();
+      dispatch(logoutAction());
+      navigate("/login", { replace: true });
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   }
 
   const today = new Date().toLocaleDateString("en-PK", {
@@ -33,11 +48,17 @@ export default function Navbar() {
   return (
     <header className="top-navbar">
       <div className="navbar-title">
-        <span className="navbar-eyebrow">AGRICULTURE MANAGEMENT</span>
+        <span className="navbar-eyebrow">
+          AGRICULTURE MANAGEMENT
+        </span>
+
         <h2>Farm Overview</h2>
+
         <p>Welcome back! Here is your farm's latest overview.</p>
       </div>
-            <SearchBar/>
+
+      <SearchBar />
+
       <div className="navbar-actions">
         <div className="today-date">
           <span>📅</span>
@@ -54,15 +75,28 @@ export default function Navbar() {
           {darkMode ? "☀️" : "🌙"}
         </button>
 
-       
+        {isLoggedIn && currentUser ? (
+          <>
+            <div className="navbar-user">
+              <span>{currentUser.name}</span>
+              <small>{currentUser.role}</small>
+            </div>
 
-        {isLoggedIn && (
+            <button
+              type="button"
+              className="logout-button"
+              onClick={handleLogout}
+            >
+              Logout
+            </button>
+          </>
+        ) : (
           <button
             type="button"
-            className="logout-button"
-            onClick={handleLogout}
+            className="login-button"
+            onClick={() => navigate("/login")}
           >
-            Logout
+            Login
           </button>
         )}
       </div>

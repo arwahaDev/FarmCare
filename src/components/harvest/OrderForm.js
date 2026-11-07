@@ -1,13 +1,18 @@
 import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import { ORDER_REQUEST } from "../../app/redux/actions/utilities";
 
 const emptyForm = {
   cropId: "",
   quantity: "",
+  sellingPricePerKg: "",
   orderDate: "",
   status: "Pending",
 };
 
 export default function OrderForm({ editingOrder, onCancelEdit }) {
+  const dispatch = useDispatch();
+
   const [crops, setCrops] = useState([]);
   const [orders, setOrders] = useState([]);
   const [form, setForm] = useState(emptyForm);
@@ -32,6 +37,9 @@ export default function OrderForm({ editingOrder, onCancelEdit }) {
       setForm({
         cropId: String(editingOrder.cropId ?? ""),
         quantity: String(editingOrder.quantity ?? ""),
+        sellingPricePerKg: String(
+          editingOrder.sellingPricePerKg ?? ""
+        ),
         orderDate: editingOrder.orderDate || "",
         status: editingOrder.status || "Pending",
       });
@@ -55,6 +63,8 @@ export default function OrderForm({ editingOrder, onCancelEdit }) {
     event.preventDefault();
 
     const quantity = Number(form.quantity);
+    const sellingPricePerKg = Number(form.sellingPricePerKg);
+
     const selectedCrop = crops.find(
       (crop) => String(crop.id) === String(form.cropId)
     );
@@ -69,6 +79,15 @@ export default function OrderForm({ editingOrder, onCancelEdit }) {
       return;
     }
 
+    if (
+      form.sellingPricePerKg === "" ||
+      !Number.isFinite(sellingPricePerKg) ||
+      sellingPricePerKg <= 0
+    ) {
+      setError("Enter a valid selling price per kg.");
+      return;
+    }
+
     if (!form.orderDate) {
       setError("Please select an order date.");
       return;
@@ -77,7 +96,10 @@ export default function OrderForm({ editingOrder, onCancelEdit }) {
     const order = {
       id: editingOrder?.id || `${Date.now()}-${Math.random()}`,
       cropId: form.cropId,
+      cropName: selectedCrop.name,
       quantity,
+      sellingPricePerKg,
+      totalAmount: quantity * sellingPricePerKg,
       orderDate: form.orderDate,
       status: form.status,
     };
@@ -90,11 +112,29 @@ export default function OrderForm({ editingOrder, onCancelEdit }) {
 
     try {
       localStorage.setItem("agri_orders", JSON.stringify(updatedOrders));
+
       setOrders(updatedOrders);
       setForm(emptyForm);
+
+      // Redux synchronization
+      if (editingOrder) {
+        dispatch({
+          type: ORDER_REQUEST.UPDATE_ORDER_SUCCESS,
+          payload: order,
+        });
+      } else {
+        dispatch({
+          type: ORDER_REQUEST.ADD_ORDER_SUCCESS,
+          payload: order,
+        });
+      }
+
       setMessage(
-        editingOrder ? "Order updated successfully." : "Order added successfully."
+        editingOrder
+          ? "Order updated successfully."
+          : "Order added successfully."
       );
+
       setError("");
 
       if (editingOrder) onCancelEdit();
@@ -120,7 +160,9 @@ export default function OrderForm({ editingOrder, onCancelEdit }) {
 
       <form onSubmit={handleSubmit}>
         <div className="mb-3">
-          <label className="form-label" htmlFor="order-crop">Crop</label>
+          <label className="form-label" htmlFor="order-crop">
+            Crop
+          </label>
           <select
             id="order-crop"
             name="cropId"
@@ -155,8 +197,32 @@ export default function OrderForm({ editingOrder, onCancelEdit }) {
           />
         </div>
 
+        {/* NEW: Selling Price */}
         <div className="mb-3">
-          <label className="form-label" htmlFor="order-date">Order Date</label>
+          <label
+            className="form-label"
+            htmlFor="order-selling-price"
+          >
+            Selling Price (Rs. per kg)
+          </label>
+          <input
+            id="order-selling-price"
+            name="sellingPricePerKg"
+            type="number"
+            min="0.01"
+            step="any"
+            className="form-control"
+            value={form.sellingPricePerKg}
+            onChange={updateField}
+            placeholder="Enter price per kg"
+            required
+          />
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label" htmlFor="order-date">
+            Order Date
+          </label>
           <input
             id="order-date"
             name="orderDate"
@@ -169,7 +235,9 @@ export default function OrderForm({ editingOrder, onCancelEdit }) {
         </div>
 
         <div className="mb-3">
-          <label className="form-label" htmlFor="order-status">Status</label>
+          <label className="form-label" htmlFor="order-status">
+            Status
+          </label>
           <select
             id="order-status"
             name="status"

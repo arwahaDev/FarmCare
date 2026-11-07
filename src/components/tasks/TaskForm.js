@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { addTask } from "../../store/actions/taskActions";
+import { CREATETASK } from "../../app/redux/actions/tasks/index";
 
 function TaskForm() {
   const dispatch = useDispatch();
@@ -25,7 +25,7 @@ function TaskForm() {
       completed: false,
     };
 
-    dispatch(addTask(newTask));
+    dispatch(CREATETASK(newTask));
 
     setTitle("");
     setDueDate("");
@@ -43,6 +43,7 @@ function TaskForm() {
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="Enter task title"
+        required
       />
 
       <label htmlFor="task-date">Due Date</label>

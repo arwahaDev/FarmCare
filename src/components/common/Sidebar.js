@@ -6,8 +6,10 @@ const menuItems = [
   { title: "Crops", path: "/crops", icon: "🌱" },
   { title: "Harvest & Orders", path: "/harvest-orders", icon: "📦" },
   { title: "Buyers", path: "/buyers", icon: "👥" },
-
+  { title: "Workers", path: "/workers", icon: "👨‍🌾" },
   { title: "Tasks", path: "/tasks", icon: "📋" },
+  {title: "Equipment", path: "/equipment", icon: "🚜"},
+  { title: "Maintenance", path: "/maintenance", icon: "🔧" },
   { title: "Expenses", path: "/expenses", icon: "💰" },
   { title: "Inventory", path: "/Inventory", icon: "📦" },
   { title: "Reports", path: "/reports", icon: "📊" },

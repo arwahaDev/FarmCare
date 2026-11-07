@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { addInventoryItem } from "../../store/reducers/inventoryReducer";
+import { addInventoryItem } from "../../app/redux/actions/inventory";
 
 export default function InventoryForm() {
   const dispatch = useDispatch();

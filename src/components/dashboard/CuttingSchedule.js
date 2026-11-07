@@ -4,15 +4,30 @@ export default function CuttingSchedule() {
   const [crops, setCrops] = useState([]);
 
   useEffect(() => {
-    try {
-      const savedCrops = localStorage.getItem("agri_crops");
+    function loadCrops() {
+      try {
+        const savedCrops = JSON.parse(
+          localStorage.getItem("agri_crops") || "[]"
+        );
 
-      if (savedCrops) {
-        setCrops(JSON.parse(savedCrops));
+        setCrops(Array.isArray(savedCrops) ? savedCrops : []);
+      } catch (error) {
+        console.error("Unable to load crops:", error);
+        setCrops([]);
       }
-    } catch (error) {
-      console.error("Unable to load crop records:", error);
     }
+
+    loadCrops();
+
+    window.addEventListener("focus", loadCrops);
+    window.addEventListener("storage", loadCrops);
+    window.addEventListener("cropsUpdated", loadCrops);
+
+    return () => {
+      window.removeEventListener("focus", loadCrops);
+      window.removeEventListener("storage", loadCrops);
+      window.removeEventListener("cropsUpdated", loadCrops);
+    };
   }, []);
 
   const today = new Date();
@@ -25,6 +40,10 @@ export default function CuttingSchedule() {
         `${crop.cuttingDate}T00:00:00`
       );
 
+      if (Number.isNaN(cuttingDate.getTime())) {
+        return null;
+      }
+
       const daysRemaining = Math.ceil(
         (cuttingDate.getTime() - today.getTime()) /
           (1000 * 60 * 60 * 24)
@@ -33,10 +52,9 @@ export default function CuttingSchedule() {
       return {
         ...crop,
         daysRemaining,
-        validDate: !Number.isNaN(cuttingDate.getTime()),
       };
     })
-    .filter((crop) => crop.validDate)
+    .filter(Boolean)
     .sort(
       (a, b) =>
         new Date(a.cuttingDate) - new Date(b.cuttingDate)
@@ -45,17 +63,17 @@ export default function CuttingSchedule() {
   return (
     <div className="dashboard-card mb-4">
       <h4 className="section-heading">
-        Crop Cutting Schedule
+        Cutting by Crop
       </h4>
 
       <p className="text-muted">
-        View upcoming and overdue crop cutting dates.
+        View crop cutting schedules and harvest quantities.
       </p>
 
       {scheduledCrops.length === 0 ? (
         <div className="alert alert-info mb-0">
-          No cutting dates available. Add a cutting date
-          to your crop records to display the schedule.
+          No cutting dates available. Add a crop with a
+          cutting date to display the schedule.
         </div>
       ) : (
         <div className="table-responsive">
@@ -65,17 +83,30 @@ export default function CuttingSchedule() {
                 <th>Crop Name</th>
                 <th>Field</th>
                 <th>Cutting Date</th>
+                <th>Expected Quantity (kg)</th>
+                <th>Harvest Quantity (kg)</th>
                 <th>Days Remaining</th>
                 <th>Status</th>
               </tr>
             </thead>
 
             <tbody>
-              {scheduledCrops.map((crop) => (
-                <tr key={crop.id ?? crop.name}>
-                  <td>{crop.name}</td>
+              {scheduledCrops.map((crop, index) => (
+                <tr key={crop.id ?? index}>
+                  <td>{crop.name || "Unnamed Crop"}</td>
+
                   <td>{crop.field || "Not specified"}</td>
+
                   <td>{crop.cuttingDate}</td>
+
+                  <td>
+                    {Number(crop.expectedQuantity) || 0} kg
+                  </td>
+
+                  <td>
+                    {Number(crop.harvestQty) || 0} kg
+                  </td>
+
                   <td>
                     {crop.daysRemaining < 0
                       ? `${Math.abs(crop.daysRemaining)} days overdue`
@@ -83,6 +114,7 @@ export default function CuttingSchedule() {
                       ? "Due today"
                       : `${crop.daysRemaining} days`}
                   </td>
+
                   <td>
                     <span
                       className={`badge ${

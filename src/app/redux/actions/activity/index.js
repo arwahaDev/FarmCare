@@ -1,0 +1,3 @@
+export const GETACTIVITY = "GETACTIVITY";
+export const LOGACTIVITY = "LOGACTIVITY";
+export const CLEARACTIVITY = "CLEARACTIVITY";

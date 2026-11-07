@@ -1,0 +1,4 @@
+export const TOGGLETHEME = "TOGGLETHEME";
+export const SHOWTOAST = "SHOWTOAST";
+export const HIDETOAST = "HIDETOAST";
+export const TOGGLESIDEBAR = "TOGGLESIDEBAR";

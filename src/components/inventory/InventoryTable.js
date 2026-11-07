@@ -1,23 +1,35 @@
 import { useSelector, useDispatch } from "react-redux";
-import { deleteInventoryItem } from "../../store/reducers/inventoryReducer";
+import { removeInventoryItem } from "../../app/redux/actions/inventory";
 
 export default function InventoryTable() {
   const dispatch = useDispatch();
 
-  const inventory = useSelector((state) => state.inventory || []);
+  // Get Inventory from Redux
+  const inventoryData = useSelector(
+    (state) => state.inventory
+  );
 
+  // Make sure inventory is an Array
+  const inventory = Array.isArray(inventoryData)
+    ? inventoryData
+    : Array.isArray(inventoryData?.inventory)
+      ? inventoryData.inventory
+      : [];
+
+  // Delete Inventory Item
   const handleDelete = (id) => {
     const confirmed = window.confirm(
       "Are you sure you want to delete this item?"
     );
 
     if (confirmed) {
-      dispatch(deleteInventoryItem(id));
+      dispatch(removeInventoryItem(id));
     }
   };
 
   return (
     <section className="inventory-table-section">
+
       <h3>Inventory List</h3>
 
       {inventory.length === 0 ? (
@@ -26,7 +38,9 @@ export default function InventoryTable() {
         </p>
       ) : (
         <div className="inventory-table-wrapper">
+
           <table className="inventory-table">
+
             <thead>
               <tr>
                 <th>Item Name</th>
@@ -40,10 +54,12 @@ export default function InventoryTable() {
             <tbody>
               {inventory.map((item) => (
                 <tr key={item.id}>
+
                   <td>{item.name}</td>
                   <td>{item.category}</td>
                   <td>{item.quantity}</td>
                   <td>{item.unit}</td>
+
                   <td>
                     <button
                       type="button"
@@ -53,12 +69,16 @@ export default function InventoryTable() {
                       Delete
                     </button>
                   </td>
+
                 </tr>
               ))}
             </tbody>
+
           </table>
+
         </div>
       )}
+
     </section>
   );
 }

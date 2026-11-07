@@ -1,35 +1,50 @@
 import { useDispatch, useSelector } from "react-redux";
+
 import {
-  updateTask,
-  deleteTask,
-} from "../../store/actions/taskActions";
+  UPDATETASK,
+  REMOVETASK,
+} from "../../app/redux/actions/tasks";
 
 function TaskList() {
   const dispatch = useDispatch();
-  const tasks = useSelector((state) => state.tasks || []);
 
+  const tasks = useSelector(
+    (state) => state.tasks?.tasks ?? []
+  );
+
+  // Remove invalid task entries
+  const validTasks = Array.isArray(tasks)
+    ? tasks.filter((task) => task && typeof task === "object")
+    : [];
+
+  // Update Task
   const toggleTask = (task) => {
-    dispatch(
-      updateTask({
-        id: task.id,
-        updates: { completed: !task.completed },
-      })
-    );
-  };
+  console.log("Updating task:", task);
 
-  const handleDelete = (id) => {
-    dispatch(deleteTask(id));
-  };
+  dispatch(
+    UPDATETASK(task.id, {
+      ...task,
+      completed: !task.completed,
+    })
+  );
+};
 
+const handleDelete = (id) => {
+  console.log("Deleting task ID:", id);
+
+  dispatch(REMOVETASK(id));
+};
+   
+      
   return (
-    <div>
+    <div className="task-list">
       <h2>Task List</h2>
 
-      {tasks.length === 0 ? (
+      {validTasks.length === 0 ? (
         <p>No tasks available.</p>
       ) : (
-        tasks.map((task) => (
-          <div key={task.id}>
+        validTasks.map((task) => (
+          <div className="task-item" key={task.id}>
             <input
               type="checkbox"
               checked={Boolean(task.completed)}
@@ -43,13 +58,19 @@ function TaskList() {
                   : "none",
               }}
             >
-              {task.title}
+              {task.title || "Untitled Task"}
             </span>
 
-            <p>Due Date: {task.dueDate || "Not set"}</p>
-            <p>Priority: {task.priority}</p>
+            <p>
+              Due Date: {task.dueDate || "Not set"}
+            </p>
 
-            <button onClick={() => handleDelete(task.id)}>
+            <p>Priority: {task.priority || "Normal"}</p>
+
+            <button
+              type="button"
+              onClick={() => handleDelete(task.id)}
+            >
               Delete
             </button>
           </div>

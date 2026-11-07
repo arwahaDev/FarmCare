@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { loginUser } from "../../store/actions/authActions";
+
+import { login } from "../../app/redux/actions/users";
+import { login as loginAPI } from "../../app/redux/api/users";
 
 export default function LoginForm() {
   const navigate = useNavigate();
@@ -11,20 +13,32 @@ export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
-    const result = dispatch(loginUser(email, password));
+    try {
+      const result = await loginAPI(email, password);
 
-    if (!result?.success) {
-      setError(result?.message || "Login failed. Please try again.");
-      return;
+      if (!result.success) {
+        setError(result.message || "Login failed.");
+        return;
+      }
+
+      dispatch(login(result.data));
+
+      const destination =
+        location.state?.from?.pathname || "/";
+
+      navigate(destination, { replace: true });
+    } catch (error) {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    const destination = location.state?.from?.pathname || "/";
-    navigate(destination, { replace: true });
   };
 
   return (
@@ -34,6 +48,7 @@ export default function LoginForm() {
 
       <form className="login-form" onSubmit={handleSubmit}>
         <label htmlFor="login-email">Email Address</label>
+
         <input
           id="login-email"
           type="email"
@@ -45,6 +60,7 @@ export default function LoginForm() {
         />
 
         <label htmlFor="login-password">Password</label>
+
         <input
           id="login-password"
           type="password"
@@ -57,7 +73,9 @@ export default function LoginForm() {
 
         {error && <p className="login-error">{error}</p>}
 
-        <button type="submit">Login</button>
+        <button type="submit" disabled={loading}>
+          {loading ? "Logging in..." : "Login"}
+        </button>
       </form>
     </section>
   );

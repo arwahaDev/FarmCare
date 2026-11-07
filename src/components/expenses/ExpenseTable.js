@@ -1,14 +1,20 @@
 import { useDispatch, useSelector } from "react-redux";
-import { deleteExpense } from "../../store/actions/expenseActions";
+import { removeExpense } from "../../app/redux/actions/expenses";
 
 function ExpenseTable() {
   const dispatch = useDispatch();
-  const expenses = useSelector((state) => state.expenses || []);
 
-  const totalExpenses = expenses.reduce(
-    (total, expense) => total + Number(expense.amount || 0),
-    0
-  );
+  const expenses = useSelector((state)=>state.expenses?.expenses??[]);
+
+const totalExpenses = expenses.reduce(
+  (total, expense) => total + Number(expense.amount || 0),
+  0
+);
+  const handleDelete = (id) => {
+    if (window.confirm("Delete this expense?")) {
+      dispatch(removeExpense(id));
+    }
+  };
 
   return (
     <section className="expense-table-section">
@@ -38,17 +44,15 @@ function ExpenseTable() {
                 <tr key={expense.id}>
                   <td>{expense.title}</td>
                   <td>{expense.category}</td>
-                  <td>{Number(expense.amount || 0).toLocaleString()}</td>
+                  <td>
+                    {Number(expense.amount || 0).toLocaleString()}
+                  </td>
                   <td>{expense.date || "—"}</td>
                   <td>
                     <button
                       type="button"
                       className="expense-delete-btn"
-                      onClick={() => {
-                        if (window.confirm("Delete this expense?")) {
-                          dispatch(deleteExpense(expense.id));
-                        }
-                      }}
+                      onClick={() => handleDelete(expense.id)}
                     >
                       Delete
                     </button>

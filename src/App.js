@@ -1,23 +1,23 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect } from "react";
-import { useDispatch } from "react-redux";
-
-import { loadFromStorage } from "./store/thunks/loadFormStorage";
 
 import AppProvider from "./context/AppProvider";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { initializeDefaultUsers } from "./app/redux/api/users";
 
 import Navbar from "./components/common/Navbar";
 import Sidebar from "./components/common/Sidebar";
 import Toast from "./components/common/Toast";
-import Footer from "./components/common/footer";
 
 import Dashboard from "./pages/Dashboard";
 import Crops from "./pages/Crops";
 import HarvestOrders from "./pages/HarvestOrders";
 import Buyers from "./pages/Buyers";
+import Workers from "./pages/Workers";
+import Equipment from "./pages/Equipment";
 import Tasks from "./pages/Tasks";
 import Expenses from "./pages/Expenses";
+import Maintenance from "./pages/Maintenance";
 import Reports from "./pages/Reports";
 import Inventory from "./pages/Inventory";
 import Login from "./pages/Login";
@@ -37,6 +37,9 @@ function AppLayout() {
             <Route path="/crops" element={<Crops />} />
             <Route path="/harvest-orders" element={<HarvestOrders />} />
             <Route path="/buyers" element={<Buyers />} />
+            <Route path="/workers" element={<Workers />} />
+            <Route path="/equipment" element={<Equipment />} />
+            <Route path="/maintenance" element={<Maintenance />} />
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/reports" element={<Reports />} />
@@ -46,7 +49,7 @@ function AppLayout() {
           </Routes>
         </main>
 
-        <Footer />
+        
         <Toast />
       </div>
     </div>
@@ -56,10 +59,8 @@ function AppLayout() {
 function AppRoutes() {
   return (
     <Routes>
-      {/* Login page without the dashboard layout */}
       <Route path="/login" element={<Login />} />
 
-      {/* Protected application pages */}
       <Route element={<ProtectedRoute />}>
         <Route path="/*" element={<AppLayout />} />
       </Route>
@@ -68,11 +69,9 @@ function AppRoutes() {
 }
 
 export default function App() {
-  const dispatch = useDispatch();
-
   useEffect(() => {
-    dispatch(loadFromStorage());
-  }, [dispatch]);
+    initializeDefaultUsers();
+  }, []);
 
   return (
     <AppProvider>

@@ -1,12 +1,10 @@
 import { useState } from "react";
-import { addBuyer } from "../store/actions/buyerActions";
 import BuyerForm from "../components/buyers/BuyerForm";
 import BuyerTable from "../components/buyers/BuyerTable";
-import { useDispatch } from "react-redux";
-import { saveBuyer } from "../store/thunks/saveBuyer";
+
 export default function Buyers() {
   const [editingBuyer, setEditingBuyer] = useState(null);
-  
+
   function handleEdit(buyer) {
     setEditingBuyer(buyer);
     window.scrollTo({ top: 0, behavior: "smooth" });

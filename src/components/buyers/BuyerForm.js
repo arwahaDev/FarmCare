@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { saveBuyer } from "../../store/thunks/saveBuyer";
 const emptyForm = {
   name: "",
   cnic: "",
