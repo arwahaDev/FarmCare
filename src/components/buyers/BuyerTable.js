@@ -1,6 +1,17 @@
 import { useEffect, useState } from "react";
 
 export default function BuyerTable({onEdit}) {
+  const session = JSON.parse(
+     localStorage.getItem("agri_session") || "null"
+     );
+   const userRole = (
+     session?.user?.userType ||
+     session?.userType ||
+     session?.role ||
+      ""
+     ).toLowerCase();
+
+const isAdmin = userRole === "admin";
   const [buyers, setBuyers] = useState([]);
   const [search, setSearch] = useState("");
   const [cropNames, setCropNames] = useState({});
@@ -37,6 +48,7 @@ export default function BuyerTable({onEdit}) {
   }, []);
 
   function deleteBuyer(id) {
+    if(!isAdmin) return;
     const confirmed = window.confirm(
       "Are you sure you want to delete this buyer?"
     );
@@ -138,18 +150,21 @@ export default function BuyerTable({onEdit}) {
                   <td>{buyer.date}</td>
                   <td>
                     <button
-  type="button"
-  className="btn btn-sm btn-outline-primary me-2"
-  onClick={() => onEdit(buyer)}
->
-  Edit
-</button>
-                    <button
+                   type="button"
+                  className="btn btn-sm btn-outline-primary me-2"
+                   onClick={() => onEdit(buyer)}
+                     >
+                           Edit
+                    </button>
+                      {isAdmin && (
+                      <button
+                      type="button"
                       className="btn btn-sm btn-outline-danger"
                       onClick={() => deleteBuyer(buyer.id)}
-                    >
-                      Delete
-                    </button>
+                       >
+                       Delete
+                      </button>
+                      )}
                   </td>
                 </tr>
               ))}

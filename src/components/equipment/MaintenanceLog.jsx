@@ -1,18 +1,35 @@
 import { useSelector } from "react-redux";
-import { selectAllMaintenance, selectAllEquipment } from "../../app/redux/selectors";
+import {
+  selectAllMaintenance,
+  selectAllEquipment,
+} from "../../app/redux/selectors";
 
 function MaintenanceLog({ onEdit, onDelete }) {
   const maintenance = useSelector(selectAllMaintenance);
   const equipment = useSelector(selectAllEquipment);
 
-  const getEquipmentName = (equipmentId) => {
-  const item = equipment.find(
-    (equipmentItem) =>
-      String(equipmentItem.id) === String(equipmentId)
+  // Get logged-in user's role
+  const session = JSON.parse(
+    localStorage.getItem("agri_session") || "null"
   );
 
-  return item ? item.name : "Unknown Equipment";
-};
+  const userRole = (
+    session?.user?.userType ||
+    session?.userType ||
+    session?.role ||
+    ""
+  ).toLowerCase();
+
+  const isAdmin = userRole === "admin";
+
+  const getEquipmentName = (equipmentId) => {
+    const item = equipment.find(
+      (equipmentItem) =>
+        String(equipmentItem.id) === String(equipmentId)
+    );
+
+    return item ? item.name : "Unknown Equipment";
+  };
 
   if (maintenance.length === 0) {
     return (
@@ -45,7 +62,9 @@ function MaintenanceLog({ onEdit, onDelete }) {
                 <td>{getEquipmentName(item.equipmentId)}</td>
                 <td>{item.serviceDate}</td>
                 <td>{item.description}</td>
-                <td>Rs. {Number(item.cost || 0).toLocaleString()}</td>
+                <td>
+                  Rs. {Number(item.cost || 0).toLocaleString()}
+                </td>
                 <td>{item.performedBy || "—"}</td>
 
                 <td>
@@ -56,12 +75,14 @@ function MaintenanceLog({ onEdit, onDelete }) {
                     Edit
                   </button>
 
-                  <button
-                    className="btn btn-sm btn-outline-danger"
-                    onClick={() => onDelete?.(item)}
-                  >
-                    Delete
-                  </button>
+                  {isAdmin && (
+                    <button
+                      className="btn btn-sm btn-outline-danger"
+                      onClick={() => onDelete?.(item)}
+                    >
+                      Delete
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}

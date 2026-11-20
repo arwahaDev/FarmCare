@@ -1,4 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
+import { useState } from "react";
 
 import {
   UPDATETASK,
@@ -12,30 +13,81 @@ function TaskList() {
     (state) => state.tasks?.tasks ?? []
   );
 
+  // Get logged-in user's role
+  const session = JSON.parse(
+    localStorage.getItem("agri_session") || "null"
+  );
+
+  const userRole = (
+    session?.user?.userType ||
+    session?.userType ||
+    session?.role ||
+    ""
+  ).toLowerCase();
+
+  const isAdmin = userRole === "admin";
+
+  const [editingTask, setEditingTask] = useState(null);
+  const [editTitle, setEditTitle] = useState("");
+
   // Remove invalid task entries
   const validTasks = Array.isArray(tasks)
     ? tasks.filter((task) => task && typeof task === "object")
     : [];
 
-  // Update Task
+  // Update Task Status
   const toggleTask = (task) => {
-  console.log("Updating task:", task);
+    dispatch(
+      UPDATETASK(task.id, {
+        ...task,
+        completed: !task.completed,
+      })
+    );
+  };
 
-  dispatch(
-    UPDATETASK(task.id, {
-      ...task,
-      completed: !task.completed,
-    })
-  );
-};
+  // Start Editing
+  const handleEdit = (task) => {
+    setEditingTask(task);
+    setEditTitle(task.title || "");
+  };
 
-const handleDelete = (id) => {
-  console.log("Deleting task ID:", id);
+  // Save Edited Task
+  const handleSaveEdit = () => {
+    if (!editTitle.trim()) {
+      alert("Task title cannot be empty.");
+      return;
+    }
 
-  dispatch(REMOVETASK(id));
-};
-   
-      
+    dispatch(
+      UPDATETASK(editingTask.id, {
+        ...editingTask,
+        title: editTitle.trim(),
+      })
+    );
+
+    setEditingTask(null);
+    setEditTitle("");
+  };
+
+  // Cancel Editing
+  const handleCancelEdit = () => {
+    setEditingTask(null);
+    setEditTitle("");
+  };
+
+  // Delete Task - Admin Only
+  const handleDelete = (id) => {
+    if (!isAdmin) return;
+
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this task?"
+    );
+
+    if (confirmed) {
+      dispatch(REMOVETASK(id));
+    }
+  };
+
   return (
     <div className="task-list">
       <h2>Task List</h2>
@@ -51,28 +103,58 @@ const handleDelete = (id) => {
               onChange={() => toggleTask(task)}
             />
 
-            <span
-              style={{
-                textDecoration: task.completed
-                  ? "line-through"
-                  : "none",
-              }}
-            >
-              {task.title || "Untitled Task"}
-            </span>
+            {editingTask?.id === task.id ? (
+              <div>
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  placeholder="Enter task title"
+                />
 
-            <p>
-              Due Date: {task.dueDate || "Not set"}
-            </p>
+                <button type="button" onClick={handleSaveEdit}>
+                  Save
+                </button>
 
-            <p>Priority: {task.priority || "Normal"}</p>
+                <button type="button" onClick={handleCancelEdit}>
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <>
+                <span
+                  style={{
+                    textDecoration: task.completed
+                      ? "line-through"
+                      : "none",
+                  }}
+                >
+                  {task.title || "Untitled Task"}
+                </span>
 
-            <button
-              type="button"
-              onClick={() => handleDelete(task.id)}
-            >
-              Delete
-            </button>
+                <p>
+                  Due Date: {task.dueDate || "Not set"}
+                </p>
+
+                <p>Priority: {task.priority || "Normal"}</p>
+
+                <button
+                  type="button"
+                  onClick={() => handleEdit(task)}
+                >
+                  Edit
+                </button>
+
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(task.id)}
+                  >
+                    Delete
+                  </button>
+                )}
+              </>
+            )}
           </div>
         ))
       )}

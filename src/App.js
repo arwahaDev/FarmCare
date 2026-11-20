@@ -1,14 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect } from "react";
-
 import AppProvider from "./context/AppProvider";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { initializeDefaultUsers } from "./app/redux/api/users";
-
 import Navbar from "./components/common/Navbar";
 import Sidebar from "./components/common/Sidebar";
 import Toast from "./components/common/Toast";
-
 import Dashboard from "./pages/Dashboard";
 import Crops from "./pages/Crops";
 import HarvestOrders from "./pages/HarvestOrders";
@@ -22,7 +19,7 @@ import Reports from "./pages/Reports";
 import Inventory from "./pages/Inventory";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
-
+import UserManagement from "./pages/UserManagement";
 function AppLayout() {
   return (
     <div className="app-layout">
@@ -43,6 +40,16 @@ function AppLayout() {
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/reports" element={<Reports />} />
+            <Route
+             path="/users"
+             element={
+              JSON.parse(localStorage.getItem("agri_session") || "null")?.role === "Admin" ? (
+              <UserManagement />
+             ) : (
+                 <Navigate to="/" replace />
+                  )
+             }
+            />
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/404" element={<NotFound />} />
             <Route path="*" element={<Navigate to="/404" replace />} />

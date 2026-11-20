@@ -13,9 +13,23 @@ const menuItems = [
   { title: "Expenses", path: "/expenses", icon: "💰" },
   { title: "Inventory", path: "/Inventory", icon: "📦" },
   { title: "Reports", path: "/reports", icon: "📊" },
+  { title: "User Management", path: "/users", icon: "👤", adminOnly: true },
 ];
 
 export default function Sidebar() {
+   const session = JSON.parse(
+  localStorage.getItem("agri_session") || "null"
+);
+    const userRole = (
+     session?.user?.userType ||
+     session?.userType ||
+     session?.role ||
+      ""
+     ).toLowerCase();
+
+    const isAdmin = userRole === "admin";
+    const isTeamlead = userRole === "teamlead";
+    const isEmployee = userRole === "employee";
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
@@ -25,26 +39,53 @@ export default function Sidebar() {
           <p>Farm Management</p>
         </div>
       </div>
+          <p className="menu-heading">MAIN MENU</p>
+                <nav className="sidebar-nav">
+  {menuItems
+    .filter((item) => {
+      if (isAdmin) return true;
 
-      <p className="menu-heading">MAIN MENU</p>
+      if (isTeamlead) {
+        return [
+          "Dashboard",
+          "Crops",
+          "Harvest & Orders",
+          "Buyers",
+          "Workers",
+          "Tasks",
+          "Equipment",
+          "Maintenance",
+          "Expenses",
+          "Inventory",
+          "Reports",
+          "Attendance"
+        ].includes(item.title);
+      }
 
-      <nav className="sidebar-nav">
-        {menuItems.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            end={item.path === "/"}
-            className={({ isActive }) =>
-              isActive ? "sidebar-link active" : "sidebar-link"
-            }
-          >
-            <span className="menu-icon">{item.icon}</span>
-            <span>{item.title}</span>
-          </NavLink>
-           
-        ))}
-      </nav>
+      if (isEmployee) {
+        return [
+          "Dashboard",
+          "Tasks",
+          "Attendance"
+        ].includes(item.title);
+      }
 
+      return false;
+    })
+    .map((item) => (
+      <NavLink
+        key={item.path}
+        to={item.path}
+        end={item.path === "/"}
+        className={({ isActive }) =>
+          isActive ? "sidebar-link active" : "sidebar-link"
+        }
+      >
+        <span className="menu-icon">{item.icon}</span>
+        <span>{item.title}</span>
+      </NavLink>
+    ))}
+</nav>
       <div className="sidebar-footer">
         <span>🌾</span>
         <div>

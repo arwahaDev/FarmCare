@@ -1,8 +1,22 @@
 import { useSelector, useDispatch } from "react-redux";
 import { removeInventoryItem } from "../../app/redux/actions/inventory";
 
-export default function InventoryTable() {
+export default function InventoryTable({ onEdit }) {
   const dispatch = useDispatch();
+
+  // Get logged-in user role
+  const session = JSON.parse(
+    localStorage.getItem("agri_session") || "null"
+  );
+
+  const userRole = (
+    session?.user?.userType ||
+    session?.userType ||
+    session?.role ||
+    ""
+  ).toLowerCase();
+
+  const isAdmin = userRole === "admin";
 
   // Get Inventory from Redux
   const inventoryData = useSelector(
@@ -18,6 +32,8 @@ export default function InventoryTable() {
 
   // Delete Inventory Item
   const handleDelete = (id) => {
+    if (!isAdmin) return;
+
     const confirmed = window.confirm(
       "Are you sure you want to delete this item?"
     );
@@ -61,13 +77,25 @@ export default function InventoryTable() {
                   <td>{item.unit}</td>
 
                   <td>
+                    {/* Edit Button */}
                     <button
                       type="button"
-                      className="inventory-delete-btn"
-                      onClick={() => handleDelete(item.id)}
+                      className="btn btn-sm btn-primary me-2"
+                      onClick={() => onEdit?.(item)}
                     >
-                      Delete
+                      Edit
                     </button>
+
+                    {/* Admin Only Delete Button */}
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        className="inventory-delete-btn"
+                        onClick={() => handleDelete(item.id)}
+                      >
+                        Delete
+                      </button>
+                    )}
                   </td>
 
                 </tr>

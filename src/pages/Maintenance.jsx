@@ -9,6 +9,20 @@ import { removeService } from "../app/redux/actions/maintenance";
 function Maintenance() {
   const dispatch = useDispatch();
 
+  // Get logged-in user's role
+  const session = JSON.parse(
+    localStorage.getItem("agri_session") || "null"
+  );
+
+  const userRole = (
+    session?.user?.userType ||
+    session?.userType ||
+    session?.role ||
+    ""
+  ).toLowerCase();
+
+  const isAdmin = userRole === "admin";
+
   const [selectedService, setSelectedService] = useState(null);
   const [showForm, setShowForm] = useState(false);
 
@@ -18,6 +32,8 @@ function Maintenance() {
   };
 
   const handleDelete = (service) => {
+    if (!isAdmin) return;
+
     const confirmed = window.confirm(
       "Are you sure you want to delete this maintenance record?"
     );
@@ -61,7 +77,7 @@ function Maintenance() {
 
       <MaintenanceLog
         onEdit={handleEdit}
-        onDelete={handleDelete}
+        onDelete={isAdmin ? handleDelete : undefined}
       />
     </div>
   );

@@ -9,6 +9,20 @@ import {
 function AttendanceRegister() {
   const dispatch = useDispatch();
 
+  // Get logged-in user's role
+  const session = JSON.parse(
+    localStorage.getItem("agri_session") || "null"
+  );
+
+  const userRole = (
+    session?.user?.userType ||
+    session?.userType ||
+    session?.role ||
+    ""
+  ).toLowerCase();
+
+  const isAdmin = userRole === "admin";
+
   const workers = useSelector(
     (state) => state.workers?.workers ?? []
   );
@@ -55,7 +69,9 @@ function AttendanceRegister() {
       );
 
       if (alreadyMarked) {
-        alert("Attendance already marked for this worker on this date.");
+        alert(
+          "Attendance already marked for this worker on this date."
+        );
         return;
       }
 
@@ -78,7 +94,10 @@ function AttendanceRegister() {
     setStatus(record.status);
   };
 
+  // Delete Attendance - Admin Only
   const handleDelete = (id) => {
+    if (!isAdmin) return;
+
     if (window.confirm("Delete this attendance record?")) {
       dispatch(removeAttendance(id));
     }
@@ -198,13 +217,15 @@ function AttendanceRegister() {
                       Edit
                     </button>
 
-                    <button
-                      type="button"
-                      className="btn btn-danger btn-sm"
-                      onClick={() => handleDelete(record.id)}
-                    >
-                      Delete
-                    </button>
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        className="btn btn-danger btn-sm"
+                        onClick={() => handleDelete(record.id)}
+                      >
+                        Delete
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

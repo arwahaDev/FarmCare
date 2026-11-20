@@ -1,5 +1,19 @@
 import { useEffect, useState } from "react";
+
 export default function OrdersTable({ onEdit }) {
+  const session = JSON.parse(
+    localStorage.getItem("agri_session") || "null"
+  );
+
+  const userRole = (
+    session?.user?.userType ||
+    session?.userType ||
+    session?.role ||
+    ""
+  ).toLowerCase();
+
+  const isAdmin = userRole === "admin";
+
   const [orders, setOrders] = useState([]);
   const [cropNames, setCropNames] = useState({});
   const [message, setMessage] = useState("");
@@ -9,6 +23,7 @@ export default function OrdersTable({ onEdit }) {
       const savedOrders = JSON.parse(
         localStorage.getItem("agri_orders") || "[]"
       );
+
       const savedCrops = JSON.parse(
         localStorage.getItem("agri_crops") || "[]"
       );
@@ -16,9 +31,18 @@ export default function OrdersTable({ onEdit }) {
       setOrders(Array.isArray(savedOrders) ? savedOrders : []);
 
       const names = {};
-      savedCrops.forEach((crop) => {
-        names[String(crop.id)] = crop.name;
-      });
+
+      if (Array.isArray(savedCrops)) {
+        savedCrops.forEach((crop) => {
+          const cropId = crop.id ?? crop._id;
+          const cropName = crop.name || crop.cropName;
+
+          if (cropId != null && cropName) {
+            names[String(cropId)] = cropName;
+          }
+        });
+      }
+
       setCropNames(names);
     } catch {
       setMessage("Unable to load orders.");
@@ -27,17 +51,54 @@ export default function OrdersTable({ onEdit }) {
 
   useEffect(() => {
     loadOrders();
+
     window.addEventListener("focus", loadOrders);
-    return () => window.removeEventListener("focus", loadOrders);
+
+    return () => {
+      window.removeEventListener("focus", loadOrders);
+    };
   }, []);
+
+  // Get correct crop name
+  function getCropName(order) {
+    const cropId =
+      order.cropId ??
+      order.crop_id ??
+      order.crop?.id;
+
+    const matchedCrop = cropNames[String(cropId)];
+
+    if (matchedCrop) {
+      return matchedCrop;
+    }
+
+    if (typeof order.crop === "string") {
+      return order.crop;
+    }
+
+    return (
+      order.crop?.name ||
+      order.crop?.cropName ||
+      order.cropName ||
+      order.cropNames ||
+      order.crop_name ||
+      "Unknown crop"
+    );
+  }
 
   function changeStatus(order, status) {
     const updated = orders.map((item) =>
-      String(item.id) === String(order.id) ? { ...item, status } : item
+      String(item.id) === String(order.id)
+        ? { ...item, status }
+        : item
     );
 
     try {
-      localStorage.setItem("agri_orders", JSON.stringify(updated));
+      localStorage.setItem(
+        "agri_orders",
+        JSON.stringify(updated)
+      );
+
       setOrders(updated);
       setMessage("Order status updated.");
     } catch {
@@ -46,7 +107,13 @@ export default function OrdersTable({ onEdit }) {
   }
 
   function deleteOrder(orderId) {
-    if (!window.confirm("Are you sure you want to delete this order?")) {
+    if (!isAdmin) return;
+
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this order?"
+      )
+    ) {
       return;
     }
 
@@ -55,7 +122,11 @@ export default function OrdersTable({ onEdit }) {
     );
 
     try {
-      localStorage.setItem("agri_orders", JSON.stringify(updated));
+      localStorage.setItem(
+        "agri_orders",
+        JSON.stringify(updated)
+      );
+
       setOrders(updated);
       setMessage("Order deleted successfully.");
     } catch {
@@ -67,10 +138,14 @@ export default function OrdersTable({ onEdit }) {
     <div className="dashboard-card mb-4">
       <h4 className="section-heading">Orders List</h4>
 
-      {message && <div className="alert alert-info">{message}</div>}
+      {message && (
+        <div className="alert alert-info">{message}</div>
+      )}
 
       {orders.length === 0 ? (
-        <p className="text-muted mb-0">No orders have been added yet.</p>
+        <p className="text-muted mb-0">
+          No orders have been added yet.
+        </p>
       ) : (
         <div className="table-responsive">
           <table className="table table-hover align-middle">
@@ -83,12 +158,16 @@ export default function OrdersTable({ onEdit }) {
                 <th>Actions</th>
               </tr>
             </thead>
+
             <tbody>
               {orders.map((order, index) => (
                 <tr key={order.id || index}>
-                  <td>{cropNames[String(order.cropId)] || "Unknown crop"}</td>
+                  <td>{getCropName(order)}</td>
+
                   <td>{order.quantity} kg</td>
+
                   <td>{order.orderDate}</td>
+
                   <td>
                     <select
                       className="form-select form-select-sm"
@@ -103,21 +182,25 @@ export default function OrdersTable({ onEdit }) {
                       <option value="Cancelled">Cancelled</option>
                     </select>
                   </td>
+
                   <td>
                     <button
                       type="button"
                       className="btn btn-sm btn-outline-primary me-2 mb-1"
-                      onClick={() => onEdit(order)}
+                      onClick={() => onEdit?.(order)}
                     >
                       Edit
                     </button>
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-outline-danger mb-1"
-                      onClick={() => deleteOrder(order.id)}
-                    >
-                      Delete
-                    </button>
+
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-danger mb-1"
+                        onClick={() => deleteOrder(order.id)}
+                      >
+                        Delete
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

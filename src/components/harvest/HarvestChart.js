@@ -22,6 +22,8 @@ export default function HarvestChart() {
   const [buyers, setBuyers] = useState([]);
 
   useEffect(() => {
+    console.log("Harvest Crops:", crops);
+    console.log("Buyer Sales:", buyers);
     function loadData() {
       try {
         const savedCrops = JSON.parse(

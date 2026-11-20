@@ -89,6 +89,13 @@ export function login(email, password) {
     return Promise.resolve(bad("Invalid email or password"));
   }
 
+  // Check Admin approval
+  if (user.status && user.status !== "approved") {
+    return Promise.resolve(
+      bad("Your account is waiting for Admin approval")
+    );
+  }
+
   const sessionUser = {
     id: user.id,
     name: user.name,
@@ -107,7 +114,6 @@ export function login(email, password) {
     return Promise.resolve(bad("Session could not be saved"));
   }
 }
-
 // Logout
 export function logout() {
   try {
@@ -160,14 +166,14 @@ export function initializeDefaultUsers() {
   const defaultUsers = [
     {
       name: "Farm Admin",
-      email: "admin@example.com",
-      password: "AdminDemo#2026",
+      email: "admin@agrifarm.com",
+      password: "AdminDemo2026!",
       role: "Admin",
     },
     {
       name: "Farm Manager",
-      email: "manager@example.com",
-      password: "ManagerDemo#2026",
+      email: "manager@agrifarm.com",
+      password: "ManagerDemo2026!",
       role: "Manager",
     },
   ];

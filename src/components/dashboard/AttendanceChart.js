@@ -24,14 +24,14 @@ function AttendanceChart() {
   const records = useSelector(
     (state) => state.attendance?.records ?? []
   );
-
+console.log("Attendance Records: ",records);
   // Generate last 7 days
   const lastSevenDays = Array.from(
-    { length: 7 },
+    { length: 14 },
     (_, index) => {
       const date = new Date();
       date.setHours(0, 0, 0, 0);
-      date.setDate(date.getDate() - (6 - index));
+      date.setDate(date.getDate() - (13 - index));
 
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, "0");

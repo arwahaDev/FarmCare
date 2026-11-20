@@ -7,7 +7,18 @@ import {
 
 function EquipmentTable({ onEdit }) {
   const dispatch = useDispatch();
+    const session = JSON.parse(
+  localStorage.getItem("agri_session") || "null"
+);
 
+const userRole = (
+  session?.user?.userType ||
+  session?.userType ||
+  session?.role ||
+  ""
+).toLowerCase();
+
+const isAdmin = userRole === "admin";
   const equipment = useSelector(
     (state) => state.equipment?.equipment ?? []
   );
@@ -107,13 +118,15 @@ function EquipmentTable({ onEdit }) {
                       Edit
                     </button>
 
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-danger"
-                      onClick={() => handleDelete(item.id)}
-                    >
-                      Delete
-                    </button>
+                        ,{isAdmin && (
+  <button
+    type="button"
+    className="btn btn-sm btn-danger"
+    onClick={() => handleDelete(item.id)}
+  >
+    Delete
+  </button>
+)}
                   </td>
                 </tr>
               ))

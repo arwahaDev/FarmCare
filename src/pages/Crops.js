@@ -13,6 +13,21 @@ const emptyForm = {
 };
 
 export default function Crops() {
+  // User Role
+  const session = JSON.parse(
+    localStorage.getItem("agri_session") || "null"
+  );
+
+  const userRole = (
+    session?.user?.userType ||
+    session?.userType ||
+    session?.role ||
+    ""
+  ).toLowerCase();
+
+  const isAdmin = userRole === "admin";
+
+  // States
   const [crops, setCrops] = useLocalStorage("agri_crops", []);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
@@ -21,6 +36,7 @@ export default function Crops() {
   const [message, setMessage] = useState("");
   const [buyers, setBuyers] = useState([]);
 
+  // Load Buyers
   useEffect(() => {
     function loadBuyers() {
       try {
@@ -43,6 +59,7 @@ export default function Crops() {
     };
   }, []);
 
+  // Handle Input Changes
   function handleChange(event) {
     const { name, value } = event.target;
 
@@ -52,14 +69,17 @@ export default function Crops() {
     }));
   }
 
+  // Get Crop Health Status
   function getStatus(score) {
     const health = Number(score);
 
     if (health >= 70) return "Healthy";
     if (health >= 40) return "Needs Attention";
+
     return "Critical";
   }
 
+  // Add or Update Crop
   function handleSubmit(event) {
     event.preventDefault();
 
@@ -122,6 +142,7 @@ export default function Crops() {
     setEditingId(null);
   }
 
+  // Edit Crop
   function handleEdit(crop) {
     setForm({
       name: crop.name || "",
@@ -141,7 +162,10 @@ export default function Crops() {
     });
   }
 
+  // Delete Crop - Admin Only
   function handleDelete(id) {
+    if (!isAdmin) return;
+
     const confirmed = window.confirm(
       "Are you sure you want to delete this crop?"
     );
@@ -162,6 +186,7 @@ export default function Crops() {
     setMessage("Crop deleted successfully.");
   }
 
+  // Search and Health Filter
   const filteredCrops = crops.filter((crop) => {
     const matchesSearch =
       `${crop.name} ${crop.field}`
@@ -175,6 +200,7 @@ export default function Crops() {
     return matchesSearch && matchesHealth;
   });
 
+  // Export Crops CSV
   function handleExportCrops() {
     const savedCrops = JSON.parse(
       localStorage.getItem("agri_crops") || "[]"
@@ -207,6 +233,7 @@ export default function Crops() {
         Export Crops CSV
       </button>
 
+      {/* Crop Form */}
       <div className="dashboard-card mb-4">
         <h4 className="section-heading">
           {editingId !== null ? "Edit Crop" : "Add New Crop"}
@@ -330,9 +357,11 @@ export default function Crops() {
         </form>
       </div>
 
+      {/* Crop Records */}
       <div className="dashboard-card">
         <h4 className="section-heading">Crop Records</h4>
 
+        {/* Search and Filter */}
         <div className="row g-3 mb-3">
           <div className="col-12 col-md-8">
             <input
@@ -357,6 +386,7 @@ export default function Crops() {
           </div>
         </div>
 
+        {/* Crops Table */}
         <div className="table-responsive">
           <table className="table table-hover align-middle">
             <thead>
@@ -428,12 +458,15 @@ export default function Crops() {
                           Edit
                         </button>
 
-                        <button
-                          className="btn btn-sm btn-outline-danger"
-                          onClick={() => handleDelete(crop.id)}
-                        >
-                          Delete
-                        </button>
+                        {isAdmin && (
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-danger"
+                            onClick={() => handleDelete(crop.id)}
+                          >
+                            Delete
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

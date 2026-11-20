@@ -42,7 +42,6 @@ export default function Dashboard() {
   const profitRows = useSelector(selectProfitByCrop);
   // Local state
   const [refreshing, setRefreshing] = useState(false);
-
   // Support both Open-Meteo raw data and normalized Redux data
   // Read Current Weather
 const current = useMemo(() => {
@@ -221,10 +220,10 @@ const daily = useMemo(() => {
       timeStyle: "short",
     });
   };
-
+   
   return (
     <div className="farm-dashboard">
-
+       
       {/* HERO SECTION */}
       <section className="dashboard-hero">
 
@@ -695,6 +694,7 @@ const daily = useMemo(() => {
         </div>
 
       </section>
+        
       {/* LOW STOCK */}
       <section className="dashboard-section">
 
